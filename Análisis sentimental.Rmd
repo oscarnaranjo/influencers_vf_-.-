@@ -178,7 +178,76 @@ ggplot(scores_fq, aes(reorder(word, polarity), polarity, fill=pos_or_neg))+
 ```
 
 ##*7.b.si deseo plotear la frecuencia de uno de los sentimientos para ver las palabras que más se repiten en cada sentimiento*
-###*aplico barplot, seleccionado en height la columna o sentimiento que deseo ver y names lo hago manual, observando scores_cloud, ylab="Frecuencia"para poner nombre a eje y y lo mismo con xlab*
+###*aplico barplot, seleccionado en height la columna o sentimiento que deseo ver y names lo hago manual, observando scores_cloud, ylab="Frecuencia"para poner nombre a eje y y lo mismo con xlab, tambien pongo border= f para que las barras no tengan borde y pueda ver los números*
+##*alegría*
 ```{r}
-barplot(height=sort(scores_cloud$alegria, decreasing = TRUE)[1:5], names=c("mejor","felicidad", "bueno", "alegría", "pasión")[1:5], las=2, ylim=c(0, 400), main = "5 Palabras más repetidas - Alegría", col="yellow")
+bar_alg<-barplot(height=sort(scores_cloud$alegria, decreasing = TRUE)[1:5], names=c("mejor","felicidad", "bueno", "alegría", "pasión")[1:5], las=2, ylim=c(0, 400), main = "5 Palabras más repetidas - Alegría", col="yellow", border=F)
+```
+
+#*7.c.agrego texto a las grafíca para poder ver los números de cada barra*
+```{r}
+text(bar_alg, sort(scores_cloud$alegria, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$alegria, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*anticipación*
+```{r}
+bar_ant<-barplot(height=sort(scores_cloud$anticipacion, decreasing = TRUE)[1:5], names=c("bueno","pasión", "llegar", "disfrutar", "felicidad")[1:5], las=2, ylim=c(0, 400), main = "5 Palabras más repetidas - Anticipación", col="green", border=F)
+```
+
+```{r}
+text(bar_ant, sort(scores_cloud$anticipacion, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$anticipacion, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*confianza*
+```{r}
+bar_con<-barplot(height=sort(scores_cloud$confianza, decreasing = TRUE)[1:5], names=c("bueno","pasión", "disfrutar", "importante", "seguro")[1:5], las=2, ylim=c(0, 400), main = "5 Palabras más repetidas - Confianza", col="purple", border=F)
+```
+
+```{r}
+text(bar_con , sort(scores_cloud$confianza, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$confianza, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*disgusto*
+```{r}
+bar_dis<-barplot(height=sort(scores_cloud$disgusto, decreasing = TRUE)[1:5], names=c("falta","perder", "cuerpo", "mal", "fuerte")[1:5], las=2, ylim=c(0, 120), main = "5 Palabras más repetidas - Disgusto", col="pink", border=F)
+```
+
+```{r}
+text(bar_dis, sort(scores_cloud$disgusto, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$disgusto, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*enfado*
+```{r}
+bar_enf<-barplot(height=sort(scores_cloud$enfado, decreasing = TRUE)[1:5], names=c("perder","lucha", "falta", "reto", "mal")[1:5], las=2, ylim=c(0, 200), main = "5 Palabras más repetidas - Enfado", col="orange", border=F)
+```
+
+```{r}
+text(bar_enf, sort(scores_cloud$enfado, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$enfado, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*miedo*
+```{r}
+bar_mie<-barplot(height=sort(scores_cloud$miedo, decreasing = TRUE)[1:5], names=c("falta","reto", "cuerpo", "dolor", "miedo")[1:5], las=2, ylim=c(0, 120), main = "5 Palabras más repetidas - Miedo", col="lightblue", border=F)
+```
+
+```{r}
+text(bar_mie, sort(scores_cloud$miedo, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$miedo, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*sorpresa*
+```{r}
+bar_sor<-barplot(height=sort(scores_cloud$sorpresa, decreasing = TRUE)[1:5], names=c("bueno","descanso", "alegría", "perder", "espectacular")[1:5], las=2, ylim=c(0, 350), main = "5 Palabras más repetidas - Sorpresa", col="grey", border=F)
+```
+
+```{r}
+text(bar_sor, sort(scores_cloud$sorpresa, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$sorpresa, decreasing = TRUE)[1:5], sep=""), cex=1)
+```
+
+##*tristeza*
+```{r}
+bar_tri<-barplot(height=sort(scores_cloud$tristeza, decreasing = TRUE)[1:5], names=c("dolor","mal", "perder", "cuerpo", "mayor")[1:5], las=2, ylim=c(0, 250), main = "5 Palabras más repetidas - Tristeza", col="lightgreen", border=F)
+```
+
+```{r}
+text(bar_tri, sort(scores_cloud$tristeza, decreasing = TRUE)[1:5], paste("n: ", sort(scores_cloud$tristeza, decreasing = TRUE)[1:5], sep=""), cex=1)
 ```
