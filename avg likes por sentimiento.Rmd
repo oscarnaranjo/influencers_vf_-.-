@@ -1,0 +1,255 @@
+---
+title: "Promedio likes por sentimiento"
+author: "Oscar Naranjo"
+date: "27/3/2020"
+output: html_document
+---
+
+# **1.Crear diccionario de stopwords**
+## *solo uso "likes por que es la palabra que quiero quitar*
+
+```{r}
+stop_likes<-c("likes",",")
+```
+
+# **2.Creo stop_t_likes** 
+## *para que pueda usarlo en antijoin*
+
+```{r}
+stop_t_likes<-as_tibble(stop_likes) 
+```
+
+# **3.Elimino la palabra Likes**
+## *3.a.separo la data en tokens pero al mismo tiempo señalo en lineas = row_number para que la linea a la que corresponda a cada palabra quede señalada.*
+
+## *3.b.para función unnest_token si pongo: token = "ngrams", n = # me permite crear ngram*
+
+## *3.c.crear un vector para que se almacene el resultado y despues poder trabajar con el para volver a unirlo*
+
+## *3.d.Aplico antijoin con stop para borrar Likes*
+
+## *3.e.Aplico rename para cambiar el nombre de las columnas*
+
+## *3.f.Aplico select para quitar la columna linea*
+
+#*alegria*
+```{r}
+ftr_alegria_clean<-filter_alegria%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+##*transformo la data de la columna likes a numeros* 
+```{r}
+ftr_alegria_clean$likes<-as.numeric(gsub(",","",ftr_alegria_clean$likes))
+```
+
+##*construyo tabla con el average de likes de cada sentimiento*
+```{r}
+avg_ftr_alegria<-ftr_alegria_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="alegria")
+```
+
+#*avg_likes=weighted.mean(likes), var_likes=var(likes), sd_likes=sd(likes), median_likes=median(likes)*
+##*si deseo sacar otros datos estadisticos, aplico eso*
+
+#*anticipación*
+```{r}
+ftr_anticipacion_clean<-filter_anticipacion%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_anticipacion_clean$likes<-as.numeric(gsub(",","",ftr_anticipacion_clean$likes))
+```
+
+```{r}
+avg_ftr_anticipacion<-ftr_anticipacion_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="anticipación")
+```
+
+#*confianza*
+```{r}
+ftr_confianza_clean<-filter_confianza%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_confianza_clean$likes<-as.numeric(gsub(",","",ftr_confianza_clean$likes))
+```
+
+```{r}
+avg_ftr_confianza<-ftr_confianza_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="confianza")
+```
+
+#*disgusto*
+```{r}
+ftr_disgusto_clean<-filter_disgusto%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_disgusto_clean$likes<-as.numeric(gsub(",","",ftr_disgusto_clean$likes))
+```
+
+```{r}
+avg_ftr_disgusto<-ftr_disgusto_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="disgusto")
+```
+
+#*enfado*
+```{r}
+ftr_enfado_clean<-filter_enfado%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_enfado_clean$likes<-as.numeric(gsub(",","",ftr_enfado_clean$likes))
+```
+
+```{r}
+avg_ftr_enfado<-ftr_enfado_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="enfado")
+```
+
+#*miedo*
+```{r}
+ftr_miedo_clean<-filter_miedo%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_miedo_clean$likes<-as.numeric(gsub(",","",ftr_miedo_clean$likes))
+```
+
+```{r}
+avg_ftr_miedo<-ftr_miedo_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="miedo")
+```
+
+#*sorpresa*
+```{r}
+ftr_sorpresa_clean<-filter_sorpresa%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_sorpresa_clean$likes<-as.numeric(gsub(",","",ftr_sorpresa_clean$likes))
+```
+
+```{r}
+avg_ftr_sorpresa<-ftr_sorpresa_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="sorpresa")
+```
+
+#*tristeza*
+```{r}
+ftr_tristeza_clean<-filter_tristeza%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  select(-linea)
+```
+
+```{r}
+ftr_tristeza_clean$likes<-as.numeric(gsub(",","",ftr_tristeza_clean$likes))
+```
+
+```{r}
+avg_ftr_tristeza<-ftr_tristeza_clean%>%
+    summarise(likes=mean(likes))%>%
+  add_column(sentimiento="tristeza")
+```
+
+# **4.Uno las tablas de average de promedio de cada sentimiento**
+## *para generar una sola tabla*
+
+
+```{r}
+avg_full<-avg_ftr_alegria%>%
+  full_join(avg_ftr_anticipacion)%>%
+  full_join(avg_ftr_confianza)%>%
+  full_join(avg_ftr_disgusto)%>%
+  full_join(avg_ftr_enfado)%>%
+  full_join(avg_ftr_miedo)%>%
+  full_join(avg_ftr_sorpresa)%>%
+  full_join(avg_ftr_tristeza)
+```
+
+
+#**5.para graficar avg_full**
+```{r}
+ggplot(avg_full, aes(reorder(x=sentimiento,likes), y=likes))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_manual(name="frecuencia")+
+    labs(x="sentimiento", title="Likes por sentimiento")
+```
+
+##*tambien puede ser*
+
+```{r}
+barplot(height=sort(avg_full$likes, decreasing = TRUE),names=sort(avg_full$sentimiento, decreasing= TRUE), las=2, ylim=c(0, 2500), main ="likes por sentimiento para la palabra más repetida", col="grey", ylab="total de likes")
+```
+
+
+
+# **5.Función summary para ver el resumen estadistico**
+```{r}
+summary(ftr_alegria_clean$likes)
+```
+
+# **Tip: para ver la distribución aplicar funcion hist(x)** o **qqnorm(x)** o **boxplot(x)**
+# **TIP2: qqline(x) para trazar una linea entre primer y tercer cuartil, para juzgar lo goodness of fit del qq plot**
+
+# **6.Para exportar la data a excel, aplico**
+##*write_xlsx(ftr_alegria_clean, ftr_alegria_clean.xlsx)*
+###*antes debo instalar y cargar a libreria*
+install.packages("writexl")
+library("writexl")
+
+ff

@@ -1,0 +1,122 @@
+---
+title: "Bag of words"
+author: "Oscar Naranjo"
+date: "24/3/2020"
+output: pdf_document
+---
+
+#**1.Para iniciar, genero data_bag como value**
+##*este paso lo puedo repetir agregando palabras en removeWords, para quitar aquello que no dice nada*
+```{r}
+data_bag<-data_utk_complete %>%
+  removeWords("ND")
+```
+
+#**2.convierto el data_bag en vectorsource**
+```{r}
+data_corpus<-VectorSource(data_bag)
+```
+
+#**3.Convierto el vectorsoruce en VCorp y le pongo lenguaje spanish**
+```{r}
+data_vcorpus<-VCorpus(data_corpus, readerControl = list(language="spanish"))
+```
+
+#**4.Creo TDM con data_vcorpus**
+```{r}
+data_tdm<-TermDocumentMatrix(data_vcorpus)
+```
+
+#**5.Cuando sea necesario aplico sparse, para asegurarme de eliminar terminos que no sean frecuentes en todos los documentos a evaluar, valor debe ser entre 0 y 1 
+```{r}
+data_tdm2<-removeSparseTerms(data_tdm, sparse=0.999)
+```
+
+#**6.Convierto sensaciones TDM a matrix**
+```{r}
+data_tdm_matrix<-as.matrix(data_tdm)
+```
+
+#**6.Creo frecuencias de la matrix**
+```{r}
+frecuencia<-rowSums(data_tdm_matrix)
+```
+
+#**7.Organizo la frecuencia de mayor a menor**
+```{r}
+frecuencia<-sort(frecuencia, decreasing = TRUE)
+```
+
+#**8.Barplot de frecuencia de los primero 10 termimos, color red y las=2, además ylim desde 0 hasta # para que quede acorde a la frecuencia para que las palabras esten en horizontal - Si aparece error, agrandar el tamaño del plot space
+#cex.names para cambiar el tamaño de los nombres
+```{r}
+barplot(frecuencia [1:10], col="#30e3dd", las=2, ylim=c(0, 50), main = "10 Palabras más repetidas", ylab="Frecuencia", cex.names = 0.8)
+```
+
+
+#16)Creo names y cantidades para usar en nube
+nube_frecuencia<-data.frame(term=names(frecuencia), num=frecuencia)
+
+#17)Creo nube de palabras con parametros de palabras maximas, colores de menos frecuente a más frecuente y aplico scala para que todo quepa, además debo poner random.order=FALSE para que sea de mayor a menor.
+wordcloud(nube_frecuencia$term, nube_frecuencia$num, max.words = 200, colors=c("#266706","#065667", "#470667"), scale=c(1,0.8), random.order = FALSE, family="serif")
+
+#18)si quiero hacer un wordnetwork (words debe ser value) [para esto es importante limpiar y stem bien la data antes de] esto me sirve para ver la relación de una palabr con otras, 
+#para que el networkplot sea más sencillo, agregar palabras basura a stop words, hacer sondeo de palabras basura con wordlist, empeza con word_list(vector, word_list(sensacion_clean_qdap, stopwords = c("la","etc)
+#si pongo wordcloud=TRUE me hace una nube de palabras, solo con las palabras asociadas al matc.string
+word_associate(z_df_bag, match.string =c("aprendizaje"), cloud.colors = c("green","blue"), network.plot = TRUE, wordcloud = TRUE)
+
+
+#dendogram
+#19)creo nuevo TDM con sparsity
+dendogram_tdm<-removeSparseTerms(sensaciones_tdm, sparse=0.98)
+
+#20)aplico dist sobre tdm
+dendogram_dist<-dist(dendogram_tdm)
+
+#21)aplico hclust sobre dist
+hc<-hclust(dendogram_dist)
+
+#22)genero plot de hclust
+plot(hc)
+
+#23)aplico as.dendogram a hc
+hcd<-as.dendrogram(hc)
+
+#24)veo labels de hcd para saber cuales quiero de otro color
+labels(hcd)
+
+#25)aplico branches_attr_by_labels para colorear branches deseadas
+hcd_colored <- branches_attr_by_labels(hcd, c("aprendizaje", "dinamica","buena", "estudio", "gustado"),"#266706")
+
+#26)genero plot de hcd_colored, con hang(determina donde aparecen las palabras), axes=FALSE (quita la parte izquierda)
+plot(hcd_colored, main="Cluster Plot", col.main = "black", col.lab = "black", 
+     col.axis = "black", lwd = 3, lty = 3, sub = "", axes = FALSE)
+
+#27)genero axis, le doy secuencia (0, 12, 3) lo cual es(inicio, final, cada cuanto)
+axis(side = 2, at = seq(0, 9, 3), col = "black", labels = FALSE, 
+     lwd = 2)
+
+#28) añado nombres a axis
+mtext(seq(0, 9, 3), side = 2, at = seq(0, 9, 3), line = 1, 
+      col = "black", las = 2)
+
+#29) para saber numero apropiado de clusters aplico find_k a hc
+find_k(hcd_colored)
+
+#30)genero clusters k=numero de clusters sugerido en paso anterior
+rect.dendrogram(hcd_colored, k=2, border="#266706")
+
+#31) aplico findAssocs a sensaciones_Tdm (poner palabra en forma stem) 
+#(el numero indica que tan juntos estan los terminos o no, mientras más cerca de uno, significa que más aparecen juntos)
+#Los numeros van de 0 a 1, es la escala de correlación
+associations <- findAssocs(sensaciones_tdm, "aprendizaje", 0.2)
+
+#32) veo las asociaciones
+associations
+
+#33) aplico list_vect2df a associations
+associations_df <- list_vect2df(associations, col2="word", col3="score")
+
+#34) genero plot
+ggplot(associations_df, aes(score, word)) + 
+  geom_point(size = 3)

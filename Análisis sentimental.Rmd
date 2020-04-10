@@ -1,0 +1,187 @@
+---
+title: "Análisis sentimental"
+author: "Oscar Naranjo"
+date: "17/3/2020"
+output: pdf_document
+---
+
+#**1.tokenize data**
+##*extraigo y unnest la data que voy a usar en el análisis sentimental*
+```{r}
+sentimiento<-data_df%>%
+unnest_tokens(word, caption)
+```
+
+#**2.Cargo diccionario-sentimental**
+##*2.a.cargo diccionario-sentimental al proyecto (NRC_WORDS_with_sentiment_usar_este)*
+##*2.b.cargo diccionario-sentimental al global environment*
+```{r}
+NRC_es <- read.csv("/cloud/project/NRC WORDS with sentiment_usar_este.csv", row.names=NULL, sep=";", stringsAsFactors=FALSE)
+```
+
+#**3.Cotejar NRC_es con sentimiento**
+##*inner join de sentimiento con NRC_es para que se relacione el diccionario-sentimental con data de sentimiento*
+###*count de sentiment y word*
+##*3.a.reviso las palabras y el sentimiento que tienen asociado, para ver si debo hacer algun cambio en el diccionario*
+###*en este caso no debi hacer ningún cambio*
+```{r}
+scores_chart<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, word)
+```
+
+#**4.Cotejar NRC_es con sentimiento**
+###*count de sentiment*
+##*esta es la versión final a usar despues de la corrección del paso 3*
+```{r}
+scores_chart<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment)
+```
+##**4.a.si quiero hacer grafico por usuario**
+###*agrego en count el nombre de la columna, en este caso Usuario* 
+###*además agregas filter para filtrar por usuario requerido"
+```{r}
+scores_chart_aethos<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "aethosheadcoach"))
+```
+
+##4.b**genero cada usuario por separado **
+```{r}
+scores_chart_runaddict<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "the_runaddict"))
+
+scores_chart_merchan<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "camilo.merchan"))
+
+scores_chart_ena<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "enahernandezh"))
+
+scores_chart_yaar<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "eyaar"))
+
+scores_chart_itsur<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "itsurstyle_"))
+
+scores_chart_naty<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "natyarbelaezs"))
+
+scores_chart_sebast<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "sebastianortizg"))
+
+scores_chart_susy<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "susy_mora"))
+
+scores_chart_caro<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(sentiment, Usuario)%>%
+  filter(str_detect(Usuario, "carolruizgranados"))
+```
+
+##**4.c.para agregarlos a todos en el mismo radar chart**
+###*los full_join todos**
+```{r}
+scores_full<-scores_chart_aethos%>%
+  full_join(scores_chart_caro, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_ena, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_itsur, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_merchan, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_naty, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_runaddict, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_sebast, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_susy, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_yaar, by=c("sentiment"="sentiment"))
+```
+
+##**4.d.Cambio el nombre de las columnas para que las leyendas se entiendan**
+```{r}
+colnames(scores_full)<-c("sentimiento", "aethos", "aethos_n", "carol", "carol_n", "ena", "ena_n","itsur", "itsur_n", "merchan", "merchan_n", "naty", "naty_n", "runaddict", "runaddict_n", "sebas", "sebas_n", "susy", "susy_n", "yaar", "yaar_n")
+```
+
+scores_try<-select(scores_full, -ena, -ena_n)
+
+chartJSRadar(scores_full)
+
+
+#**5.Genero chart radar**
+##*este chart radar plotea los sentimientos*
+```{r}
+chartJSRadar(scores_chart)
+```
+
+#**5.a.Para generar el chart radar de cada usuario**
+```{r}
+chartJSRadar(scores_chart_usuario, main="Sentimientos aethosheadcoach", showLegend=FALSE, labelSize = 15)
+```
+
+#**6.genero scores_cloud**
+##*esto para generar una nube de palabras por sentimiento*
+```{r}
+scores_cloud<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(!grepl("positivo|negativo", sentiment))%>%
+  count(word, sentiment)%>%
+  spread(sentiment, n, fill=0)%>%
+  data.frame(row.names = "word")
+```
+
+##*6.a.Ploteo nube*
+```{r}
+comparison.cloud(scores_cloud, max.words=60, title.size=1, scale = c(1,1), random.order = FALSE)
+```
+
+#**7.Genero frecuencia**
+##*creo scores_fq para poder plotear frecuencia*
+```{r}
+scores_fq<-sentimiento%>%
+  inner_join(NRC_es, by=c("word"="word"))%>%
+  filter(grepl("positivo|negativo", sentiment))%>%
+  count(word, sentiment)%>%
+  spread(sentiment, n, fill=0)%>%
+  mutate(polarity=positivo-negativo)%>%
+  mutate(pos_or_neg=ifelse(polarity>0 , "positivo", "negativo"))
+```
+
+##*7.a.Ploteo frecuencia*
+```{r}
+ggplot(scores_fq, aes(reorder(word, polarity), polarity, fill=pos_or_neg))+
+  geom_col()+
+  ggtitle("scores_fq")+
+  theme(axis.text.x=element_text(angle=90, vjust = -0,1))
+```
+
+##*7.b.si deseo plotear la frecuencia de uno de los sentimientos para ver las palabras que más se repiten en cada sentimiento*
+###*aplico barplot, seleccionado en height la columna o sentimiento que deseo ver y names lo hago manual, observando scores_cloud, ylab="Frecuencia"para poner nombre a eje y y lo mismo con xlab*
+```{r}
+barplot(height=sort(scores_cloud$alegria, decreasing = TRUE)[1:5], names=c("mejor","felicidad", "bueno", "alegría", "pasión")[1:5], las=2, ylim=c(0, 400), main = "5 Palabras más repetidas - Alegría", col="yellow")
+```

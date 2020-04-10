@@ -1,0 +1,204 @@
+---
+title: "Influencers & Deporte"
+author: "Oscar Naranjo"
+date: "12/3/2020"
+output:
+  html_document:
+    df_print: paged
+---
+#**Importar, limpiar data y prepara data para su uso**
+
+#**para que github funcione debo poner en terminal**
+##*git config --global user.email "naranjodelg@gmail.com" y git config --global user.namne "onaranjo1991"*
+
+# 1.Importar la data
+```{r}
+Data_scr <- read.csv("/cloud/project/scrapped data a usar vf.csv", sep=";", stringsAsFactors=FALSE)
+```
+
+# 2.Instalar los paquetes a usar
+```{r, include=FALSE}
+install.packages("tidyverse")
+install.packages("tidytext")
+install.packages("tm")
+install.packages("topicmodels")
+install.packages("dendextend")
+install.packages("tidyselect")
+install.packages("tidyr")
+install.packages("tibble")
+install.packages("stringr")
+install.packages("stringi")
+install.packages("SnowballC")
+install.packages("ggplot2")
+install.packages("radarchart")
+install.packages("wordcloud")
+install.packages("stringr")
+library(tidyverse)
+library(tidytext)
+library(tm)
+library(topicmodels)
+library(dendextend)
+library(tidyselect)
+library(tidyr)
+library(tibble)
+library(stringr)
+library(stringi)
+library(SnowballC)
+library(ggplot2)
+library(radarchart)
+library(wordcloud)
+library(stringr)
+```
+
+# **3.Convierto la data a tible** 
+## *para usarla con tidyverse*
+```{r}
+data<-as_tibble(Data_scr)
+```
+
+# **4.Crear diccionario de stopwords**
+## *uso "spanish" stopwords y agrego palabras para complementar*
+
+```{r}
+stop<-c(stopwords("spanish"),"mas","la","lo","las","los", "y", "de", "por", "que", "es", "ya", "q", "a", "ah", "ha", "al", "da", "una", "uno", "e", "o", "u", "este", "esta","mi")
+```
+
+# **5.Creo stop_t** 
+## *para que pueda usarlo en antijoin*
+
+```{r}
+stop_t<-as_tibble(stop) 
+```
+
+# **6.Separar la data en tokens**
+## *6.a.separo la data en tokens pero al mismo tiempo señalo en lineas = row_number para que la linea a la que corresponda a cada palabra quede señalada.*
+
+## *6.b.para función unnest_token si pongo: token = "ngrams", n = # me permite crear ngram*
+
+## *6.c.crear un vector para que se almacene el resultado y despues poder trabajar con el para volver a unirlo*
+
+## *6.d.Aplico antijoin con stop para borrar palabras inutiles*
+
+```{r}
+data_utk<-data%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Caption)%>%
+  anti_join(stop_t, by=c("token"="value"))
+```
+
+#**7.Llevar palabras a la raiz**
+
+```{r, include=FALSE}
+data_utk_stem<-stemDocument(data_utk$token,language="spanish")
+```
+
+#**8.Completar palabras de 7**
+```{r, include=FALSE}
+data_utk_complete<-stemCompletion(data_utk_stem, data_utk$token, type="shortest")
+```
+
+#**9.Creo una lista para saber que palabras voy a reemplazar por medio de gsub**
+```{r}
+data_utk_complete_list<-list(data_utk_complete)
+```
+
+#**10.Identifico las palabras a reemplazar leyendo la lista de paso 9**
+##*debo seleccionar palabras a cambiar en stem para que se tranformen bien y debo seleccionar palabras que agregaré en la reformulación de Stemcompletion)*
+###*en este caso las palabras a cambiar en stem son: (qie / que)*
+###*en este caso las palabras para reformular Stemcompletion: (eleccion / pasion / perfeccion / entrenar / increible / gracias / construccion / echenle / fui/ proposito)*
+
+#**11.Remplazar palabras de stem**
+```{r}
+data_utk_stem=gsub("qie","que",data_utk_stem)
+```
+
+#**12.Reformulo data_utk_complete**
+##*agrego a la formula en "dictionary" las palabras que no se transformaron apropiadamente*
+```{r}
+data_utk_complete<-stemCompletion(data_utk_stem, c(data_utk$token, "eleccion", "pasion", "perfeccion", "entrenar", "increible", "gracias", "construccion", "echenle", "fui", "proposito"), type="shortest")
+```
+
+###*12.a.ajusto palabras que se cambiaron con error, en este caso: cambio gracis por gracias*
+```{r}
+data_utk_complete=gsub("gracis","gracias",data_utk_complete)
+```
+
+#**13.Quitar tildes**
+```{r}
+data_utk_complete=gsub("ú","u",data_utk_complete)
+data_utk_complete=gsub("ó","o",data_utk_complete)
+data_utk_complete=gsub("é","e",data_utk_complete)
+data_utk_complete=gsub("í","i",data_utk_complete)
+data_utk_complete=gsub("á","a",data_utk_complete)
+```
+
+#**14.Reemplazar NA, por "ND"
+##*esto es necesario para que no genere error en el momento de devolver valores a la tabla*
+###*uso "ND" y no "NA" para verificar más facil si el cambio se hizo de forma apropiada*
+```{r}
+data_utk_complete<-str_replace_na(data_utk_complete, replacement = "ND")
+```
+
+##**Tip: si deseo quitar palabras, aplico**
+
+data_utk_complete_v2<-data_utk_complete %>%
+   removeWords(c("ND", "mejorar", "ninguno"))
+
+
+#**15.Devolver palabras completadas a la tabla**
+```{r}
+data_utk$token<-data_utk_complete
+```
+
+#**16.Retornar los tokens a las frases** 
+##*en group by es indiferente el orden de las columnas*
+###*le pido que summarize caption de acuerdo a los token*
+```{r}
+data_df<-data_utk%>% 
+  group_by(Usuario, Likes, Imagen, Fecha, linea) %>% 
+  summarize(caption = str_c(token, collapse = " ")) %>%
+  ungroup()  
+```
+
+#**Comentarios**
+##*Despues de este proceso, puedo: desarrollar bag of words o analisis sentimental*
+##*Aplico __str_subset__ si deseo buscar donde hay frases con una palabra exacta, ejemplo: str_subset(data_df$caption, pattern = fixed("mucha"))* 
+##*aplico la siguiente formula para generar nuevo tibble que solo me muestre la data de acuerdo a la palabra por la cual filtro*
+
+###*en este caso separo por la palabra con mayor freciencia*
+```{r}
+filter_alegria<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "mejor"))
+    
+filter_anticipacion<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "bueno"))
+
+filter_confianza<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "bueno"))
+    
+filter_disgusto<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "falta"))
+    
+filter_enfado<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "perder"))
+    
+filter_miedo<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "falta"))
+    
+filter_sorpresa<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "bueno"))
+    
+filter_tristeza<-data_df%>%
+    select(Usuario, Likes, linea, caption) %>%   
+    filter(str_detect(caption, "dolor"))
+```
+
+    

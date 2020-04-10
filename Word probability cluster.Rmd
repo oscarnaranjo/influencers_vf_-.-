@@ -1,0 +1,65 @@
+---
+title: "Word probabilty cluster"
+author: "Oscar Naranjo"
+date: "24/3/2020"
+output: pdf_document
+---
+###*Para generar clusters de acuerdo a la probalidad de una palabra de pertenecer a un grupo*
+
+
+#**1.Genero DTM**
+##*se usa data_utk considerando que esta unnest token y es el resultado del proceso de limpieza*
+###*siempre debo de agrupar la data usando un id, en este caso fue el usuario de instragam*
+```{r}
+dtm<-data_utk %>%
+  count(token, Usuario)%>%
+  cast_dtm(Usuario, token, n )
+```
+
+
+#**2.Aplico LDA a dtm con metodo Gibbs**
+###*voy a ir cambiando k, hasta que descubra que pueda identificar un "cluster" y exista redundancia* 
+###*aparentemen seed es algo aleatorio que doy, pero que debo mantener siempre para que el experimento se pueda reproducir de forma identica*
+
+```{r}
+lda_out<-LDA(dtm, k=8, method="Gibbs", control=list(seed=42))
+```
+
+
+#**3.Aplico glimpse para ver resultado**
+```{r}
+glimpse(lda_out)
+```
+
+
+#**4.Genero lda_topics**
+```{r}
+lda_topics<-lda_out%>%
+  tidy(matrix="beta")
+```
+
+#**5.Organizo lda_topics**
+```{r}
+lda_topics%>%
+  arrange(desc(beta))
+```
+
+
+#**6.Calculo word probability**
+```{r}
+word_prob<-lda_topics%>%
+  group_by(topic)%>%
+  top_n(15, beta)%>%
+  ungroup()%>%
+  mutate(term2=fct_reorder(term, beta))
+```
+
+
+#**7.Plot word_prob**
+```{r}
+ggplot(
+  word_prob, aes(x=term2, y=beta, fill=as.factor(topic)))+
+    geom_col(show.legend = FALSE)+
+    facet_wrap(~topic, scales="free")+
+    coord_flip()
+```
