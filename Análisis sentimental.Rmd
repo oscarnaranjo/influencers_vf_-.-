@@ -44,7 +44,7 @@ scores_chart<-sentimiento%>%
 ###*agrego en count el nombre de la columna, en este caso Usuario* 
 ###*además agregas filter para filtrar por usuario requerido"
 ```{r}
-scores_chart_aethos<-sentimiento%>%
+scores_chart_and<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
@@ -53,55 +53,55 @@ scores_chart_aethos<-sentimiento%>%
 
 ##4.b**genero cada usuario por separado **
 ```{r}
-scores_chart_runaddict<-sentimiento%>%
+scores_chart_jor<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "the_runaddict"))
 
-scores_chart_merchan<-sentimiento%>%
+scores_chart_cam<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "camilo.merchan"))
 
-scores_chart_ena<-sentimiento%>%
+scores_chart_enh<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "enahernandezh"))
 
-scores_chart_yaar<-sentimiento%>%
+scores_chart_mi<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "eyaar"))
 
-scores_chart_itsur<-sentimiento%>%
+scores_chart_ale<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "itsurstyle_"))
 
-scores_chart_naty<-sentimiento%>%
+scores_chart_nat<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "natyarbelaezs"))
 
-scores_chart_sebast<-sentimiento%>%
+scores_chart_seb<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "sebastianortizg"))
 
-scores_chart_susy<-sentimiento%>%
+scores_chart_sus<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
   filter(str_detect(Usuario, "susy_mora"))
 
-scores_chart_caro<-sentimiento%>%
+scores_chart_car<-sentimiento%>%
   inner_join(NRC_es, by=c("word"="word"))%>%
   filter(!grepl("positivo|negativo", sentiment))%>%
   count(sentiment, Usuario)%>%
@@ -111,37 +111,34 @@ scores_chart_caro<-sentimiento%>%
 ##**4.c.para agregarlos a todos en el mismo radar chart**
 ###*los full_join todos**
 ```{r}
-scores_full<-scores_chart_aethos%>%
-  full_join(scores_chart_caro, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_ena, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_itsur, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_merchan, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_naty, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_runaddict, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_sebast, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_susy, by=c("sentiment"="sentiment"))%>%
-  full_join(scores_chart_yaar, by=c("sentiment"="sentiment"))
+scores_full<-scores_chart_ale%>%
+  full_join(scores_chart_and, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_cam, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_car, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_enh, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_jor, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_mi, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_nat, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_seb, by=c("sentiment"="sentiment"))%>%
+  full_join(scores_chart_sus, by=c("sentiment"="sentiment"))
 ```
 
 ##**4.d.Cambio el nombre de las columnas para que las leyendas se entiendan**
 ```{r}
-colnames(scores_full)<-c("sentimiento", "aethos", "aethos_n", "carol", "carol_n", "ena", "ena_n","itsur", "itsur_n", "merchan", "merchan_n", "naty", "naty_n", "runaddict", "runaddict_n", "sebas", "sebas_n", "susy", "susy_n", "yaar", "yaar_n")
+colnames(scores_full)<-c("sentimiento", "ale", "ale_n", "and", "and_n", "cam", "cam_n", "car", "car_n","enh", "enh_n", "jor", "jor_n", "mi", "mi_n", "nat", "nat_n", "seb", "seb_n", "sus", "sus_n")
 ```
 
-scores_try<-select(scores_full, -ena, -ena_n)
-
-chartJSRadar(scores_full)
-
+###*TIP: si quiero quitar una columna aplico selecy(x, -columnname), EJ: scores_try<-select(scores_full, -ena, -ena_n)*
 
 #**5.Genero chart radar**
 ##*este chart radar plotea los sentimientos*
 ```{r}
-chartJSRadar(scores_chart)
+chartJSRadar(scores_chart, main = "sentimientos promedio", showLegend=FALSE)
 ```
 
-#**5.a.Para generar el chart radar de cada usuario**
+#**5.a.Genero chart comparativo de usuarios*
 ```{r}
-chartJSRadar(scores_chart_usuario, main="Sentimientos aethosheadcoach", showLegend=FALSE, labelSize = 15)
+chartJSRadar(scores_full, main= "sentimientos por usuario")
 ```
 
 #**6.genero scores_cloud**
