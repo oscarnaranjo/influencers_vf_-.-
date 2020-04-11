@@ -75,7 +75,8 @@ avg_alg_ena<-ftr_alegria_ena%>%
     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
   add_column(sentimiento="alegria")%>%
   add_column(seguidores=61100)%>%
-  add_column(tasa_like="")
+  add_column(tasa_like="")%>%
+  add_column(usuario="ena")
 ```
 
 ##*agrego valor a tasa_like
@@ -106,8 +107,10 @@ avg_alg_aethos<-ftr_alegria_aethos%>%
     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
   add_column(sentimiento="alegria")%>%
   add_column(seguidores=15300)%>%
-  add_column(tasa_like="")
+  add_column(tasa_like="")%>%
+  add_column(usuario="aethos")
 ```
+
 
 ##*agrego valor a tasa_like
 ```{r}
@@ -279,13 +282,17 @@ avg_full<-avg_ftr_alegria%>%
 
 
 #**5.para graficar avg_full**
+*debo indicar en aes, fill=usuario, para que llene de colores según usuario, además en scale_fill_manual indico values, para indicar color
 ```{r}
-ggplot(avg_full, aes(reorder(x=sentimiento,likes), y=likes))+
+ggplot(avg_full, aes(reorder(x=usuario,tasa_like), y=tasa_like, fill =usuario))+
     geom_col()+
     theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
-    scale_fill_manual(name="frecuencia")+
-    labs(x="sentimiento", title="Likes por sentimiento")
+    scale_fill_manual(name="frecuencia", values = c("skyblue", "royalblue"))+
+    labs(x="Usuario", title="Tasa likes - Alegría")
 ```
+
+
+
 
 ##*tambien puede ser*
 
