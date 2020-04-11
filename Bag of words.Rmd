@@ -34,7 +34,7 @@ data_tdm2<-removeSparseTerms(data_tdm, sparse=0.999)
 
 #**6.Convierto sensaciones TDM a matrix**
 ```{r}
-data_tdm_matrix<-as.matrix(data_tdm)
+data_tdm_matrix<-as.matrix(data_tdm2)
 ```
 
 #**6.Creo frecuencias de la matrix**
@@ -50,34 +50,53 @@ frecuencia<-sort(frecuencia, decreasing = TRUE)
 #**8.Barplot de frecuencia de los primero 10 termimos, color red y las=2, además ylim desde 0 hasta # para que quede acorde a la frecuencia para que las palabras esten en horizontal - Si aparece error, agrandar el tamaño del plot space
 #cex.names para cambiar el tamaño de los nombres
 ```{r}
-barplot(frecuencia [1:10], col="#30e3dd", las=2, ylim=c(0, 50), main = "10 Palabras más repetidas", ylab="Frecuencia", cex.names = 0.8)
+barplot(frecuencia [1:10], col="#30e3dd", las=2, ylim=c(0, 250), main = "10 Palabras más repetidas", ylab="Frecuencia", cex.names = 0.8)
 ```
 
 
 #16)Creo names y cantidades para usar en nube
+```{r}
 nube_frecuencia<-data.frame(term=names(frecuencia), num=frecuencia)
+```
+
 
 #17)Creo nube de palabras con parametros de palabras maximas, colores de menos frecuente a más frecuente y aplico scala para que todo quepa, además debo poner random.order=FALSE para que sea de mayor a menor.
+```{r}
 wordcloud(nube_frecuencia$term, nube_frecuencia$num, max.words = 200, colors=c("#266706","#065667", "#470667"), scale=c(1,0.8), random.order = FALSE, family="serif")
+```
+
 
 #18)si quiero hacer un wordnetwork (words debe ser value) [para esto es importante limpiar y stem bien la data antes de] esto me sirve para ver la relación de una palabr con otras, 
 #para que el networkplot sea más sencillo, agregar palabras basura a stop words, hacer sondeo de palabras basura con wordlist, empeza con word_list(vector, word_list(sensacion_clean_qdap, stopwords = c("la","etc)
 #si pongo wordcloud=TRUE me hace una nube de palabras, solo con las palabras asociadas al matc.string
-word_associate(z_df_bag, match.string =c("aprendizaje"), cloud.colors = c("green","blue"), network.plot = TRUE, wordcloud = TRUE)
-
+```{r}
+word_associate(data_bag, match.string =c("run"), cloud.colors = c("green","blue"), network.plot = TRUE, wordcloud = TRUE)
+```
 
 #dendogram
 #19)creo nuevo TDM con sparsity
-dendogram_tdm<-removeSparseTerms(sensaciones_tdm, sparse=0.98)
+```{r}
+dendogram_tdm<-removeSparseTerms(data_tdm2, sparse=0.995)
+```
+
 
 #20)aplico dist sobre tdm
+```{r}
 dendogram_dist<-dist(dendogram_tdm)
+```
+
 
 #21)aplico hclust sobre dist
+```{r}
 hc<-hclust(dendogram_dist)
+```
+
 
 #22)genero plot de hclust
+```{r}
 plot(hc)
+```
+
 
 #23)aplico as.dendogram a hc
 hcd<-as.dendrogram(hc)

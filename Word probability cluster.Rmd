@@ -22,7 +22,7 @@ dtm<-data_utk %>%
 ###*aparentemen seed es algo aleatorio que doy, pero que debo mantener siempre para que el experimento se pueda reproducir de forma identica*
 
 ```{r}
-lda_out<-LDA(dtm, k=8, method="Gibbs", control=list(seed=42))
+lda_out<-LDA(dtm, k=10, method="Gibbs", control=list(seed=42))
 ```
 
 

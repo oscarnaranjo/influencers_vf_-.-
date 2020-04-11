@@ -5,58 +5,115 @@ date: "27/3/2020"
 output: html_document
 ---
 
-# **1.Crear diccionario de stopwords**
+# **1.Creo likes, que permite acceder a data filtrada por sentimiento y agrupada por palabra y linea **
+```{r}
+likes<-sentimiento%>%
+     inner_join(NRC_es, by=c("word"="word"))%>%
+     filter(!grepl("positivo|negativo", sentiment))%>%
+     group_by(sentiment, word, Likes, Usuario, linea)%>%
+     summarize(caption= str_c(word, collapse = " "))%>%
+     ungroup()  
+```
+
+# **2.Filtro likes por sentimiento (en este caso alegría) y aplico distinct para solo guardar una linea por caption, de esta forma no duplicare los likes por caption, por lo tanto puede analizar likes por caption por sentimiento de forma exacta**    
+     
+```{r}
+filter_alegria_ena<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(sentiment, "alegria"))%>%
+    distinct(linea, .keep_all = TRUE)
+```
+
+# **3.Crear diccionario de stopwords**
 ## *solo uso "likes por que es la palabra que quiero quitar*
 
 ```{r}
 stop_likes<-c("likes",",")
 ```
 
-# **2.Creo stop_t_likes** 
+# **4.Creo stop_t_likes** 
 ## *para que pueda usarlo en antijoin*
 
 ```{r}
 stop_t_likes<-as_tibble(stop_likes) 
 ```
 
-# **3.Elimino la palabra Likes**
-## *3.a.separo la data en tokens pero al mismo tiempo señalo en lineas = row_number para que la linea a la que corresponda a cada palabra quede señalada.*
+# **5.Elimino la palabra Likes y filtro por usuario**
+## *5.a.separo la data en tokens pero al mismo tiempo señalo en lineas = row_number para que la linea a la que corresponda a cada palabra quede señalada.*
 
-## *3.b.para función unnest_token si pongo: token = "ngrams", n = # me permite crear ngram*
+## *5.b.para función unnest_token si pongo: token = "ngrams", n = # me permite crear ngram*
 
-## *3.c.crear un vector para que se almacene el resultado y despues poder trabajar con el para volver a unirlo*
+## *5.c.crear un vector para que se almacene el resultado y despues poder trabajar con el para volver a unirlo*
 
-## *3.d.Aplico antijoin con stop para borrar Likes*
+## *5.d.Aplico antijoin con stop para borrar Likes*
 
-## *3.e.Aplico rename para cambiar el nombre de las columnas*
+## *5.e.Aplico rename para cambiar el nombre de las columnas*
 
-## *3.f.Aplico select para quitar la columna linea*
+## *5.f.Aplico filter(str_detect()) para filtrar por usuario*
 
-#*alegria*
+## *TIP: si deseo quitar una columna, aplico select EJ: select(-linea)*
+
+#*alegria ena*
 ```{r}
-ftr_alegria_clean<-filter_alegria%>%
+ftr_alegria_ena<-filter_alegria%>%
   mutate(linea= row_number()) %>%
   ungroup() %>%
   unnest_tokens(token, Likes)%>%
   anti_join(stop_t_likes, by=c("token"="value"))%>%
   rename(usuario=Usuario, likes=token)%>%
-  select(-linea)
+  filter(str_detect(usuario, "enahernandezh"))
 ```
 
 ##*transformo la data de la columna likes a numeros* 
 ```{r}
-ftr_alegria_clean$likes<-as.numeric(gsub(",","",ftr_alegria_clean$likes))
+ftr_alegria_ena$likes<-as.numeric(gsub(",","",ftr_alegria_ena$likes))
 ```
 
 ##*construyo tabla con el average de likes de cada sentimiento*
 ```{r}
-avg_ftr_alegria<-ftr_alegria_clean%>%
-    summarise(likes=mean(likes))%>%
-  add_column(sentimiento="alegria")
+avg_alg_ena<-ftr_alegria_ena%>%
+    summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+  add_column(sentimiento="alegria")%>%
+  add_column(seguidores=61100)%>%
+  add_column(tasa_like="")
 ```
 
-#*avg_likes=weighted.mean(likes), var_likes=var(likes), sd_likes=sd(likes), median_likes=median(likes)*
-##*si deseo sacar otros datos estadisticos, aplico eso*
+##*agrego valor a tasa_like
+```{r}
+avg_alg_ena$tasa_like<-avg_alg_ena$seguidores/avg_alg_ena$avg_likes
+```
+
+
+#*alegria aethos*
+```{r}
+ftr_alegria_aethos<-filter_alegria%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  filter(str_detect(usuario, "aethosheadcoach"))
+```
+
+##*transformo la data de la columna likes a numeros* 
+```{r}
+ftr_alegria_aethos$likes<-as.numeric(gsub(",","",ftr_alegria_aethos$likes))
+```
+
+##*construyo tabla con el average de likes de cada sentimiento*
+```{r}
+avg_alg_aethos<-ftr_alegria_aethos%>%
+    summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+  add_column(sentimiento="alegria")%>%
+  add_column(seguidores=15300)%>%
+  add_column(tasa_like="")
+```
+
+##*agrego valor a tasa_like
+```{r}
+avg_alg_aethos$tasa_like<-avg_alg_aethos$seguidores/avg_alg_aethos$avg_likes
+```
+
 
 #*anticipación*
 ```{r}

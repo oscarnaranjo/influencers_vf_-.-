@@ -48,6 +48,7 @@ library(ggplot2)
 library(radarchart)
 library(wordcloud)
 library(stringr)
+library(qdap)
 ```
 
 # **3.Convierto la data a tible** 
@@ -161,10 +162,11 @@ data_df<-data_utk%>%
   ungroup()  
 ```
 
+
 #**Comentarios**
-##*Despues de este proceso, puedo: desarrollar bag of words o analisis sentimental*
-##*Aplico __str_subset__ si deseo buscar donde hay frases con una palabra exacta, ejemplo: str_subset(data_df$caption, pattern = fixed("mucha"))* 
-##*aplico la siguiente formula para generar nuevo tibble que solo me muestre la data de acuerdo a la palabra por la cual filtro*
+##*C.1.Despues de este proceso, puedo: desarrollar bag of words o analisis sentimental*
+##*C.2.Aplico __str_subset__ si deseo buscar donde hay frases con una palabra exacta, ejemplo: str_subset(data_df$caption, pattern = fixed("mucha"))* 
+##*C.3.aplico la siguiente formula para generar nuevo tibble que solo me muestre la data de acuerdo a la palabra por la cual filtro*
 
 ###*en este caso separo por la palabra con mayor freciencia*
 ```{r}
@@ -200,5 +202,3 @@ filter_tristeza<-data_df%>%
     select(Usuario, Likes, linea, caption) %>%   
     filter(str_detect(caption, "dolor"))
 ```
-
-    
