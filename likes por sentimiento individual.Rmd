@@ -1,0 +1,196 @@
+---
+title: "generador de avg por usuario y sentimiento"
+output: html_document
+---
+
+# **1.Creo likes, que permite acceder a data filtrada por sentimiento y agrupada por palabra y linea **
+```{r}
+likes<-sentimiento%>%
+     inner_join(NRC_es, by=c("word"="word"))%>%
+     filter(!grepl("positivo|negativo", sentiment))%>%
+     group_by(sentiment, word, Likes, Usuario, linea)%>%
+     summarize(caption= str_c(word, collapse = " "))%>%
+     ungroup()  
+```
+
+#**Carolina**
+# **2.Filtro likes por usuario (en este caso carolruizgranados) y aplico distinct para solo guardar una linea por caption, de esta forma no duplicare los likes por caption, por lo tanto puede analizar likes por caption por sentimiento de forma exacta**    
+     
+```{r}
+res_caro<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "carolruizgranados"))%>%
+    distinct(linea, .keep_all = TRUE)
+```
+
+# **3.Crear diccionario de stopwords**
+## *solo uso "likes por que es la palabra que quiero quitar*
+## *para que pueda usarlo en antijoin*
+
+```{r}
+stop_likes<-c("likes",",")%>%
+  as_tibble(stop_likes)
+```
+
+# **4.Elimino la palabra Likes y filtro por usuario**
+## *4.a.separo la data en tokens pero al mismo tiempo señalo en lineas = row_number para que la linea a la que corresponda a cada palabra quede señalada.*
+
+## *4.b.para función unnest_token si pongo: token = "ngrams", n = # me permite crear ngram*
+
+## *4.c.crear un vector para que se almacene el resultado y despues poder trabajar con el para volver a unirlo*
+
+## *4.d.Aplico antijoin con stop para borrar Likes*
+
+## *4.e.Aplico rename para cambiar el nombre de las columnas*
+
+## *4.f.Aplico group_by(sentiment) para organizar la data por sentimiento*
+
+## *TIP: si deseo quitar una columna, aplico select EJ: select(-linea)*
+
+```{r}
+ftr_caro<-res_caro%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+```
+
+##*transformo la data de la columna likes a numeros* 
+```{r}
+ftr_caro$likes<-as.numeric(gsub(",","",ftr_caro$likes))  
+```
+
+##*construyo tabla con el average y desviación de likes de cada sentimiento*
+```{r}
+avg_caro<-ftr_caro%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(14500, 14500, 14500, 14500))%>%
+     add_column(tasa_like=" ")
+```
+
+##*construyo tasa para calcular proporción de likes de cada sentimiento*     
+```{r}
+tasa_caro<-avg_caro%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+```
+
+##*Añado la información de tasa a la tabla de promedios*      
+```{r}
+avg_caro<-ftr_caro%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(14500, 14500, 14500, 14500))%>%
+     add_column(tasa_like=tasa_caro$tasa_like)  
+```
+     
+# **5.Genero plot del usuario con todos sus sentimientos**   
+```{r}
+ggplot(avg_caro, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - Carolina", y="Tasa likes")
+```
+
+#**the_runaddict**
+```{r}
+res_runad<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "the_runaddict"))%>%
+    distinct(linea, .keep_all = TRUE)
+```
+
+```{r}
+ftr_runad<-res_runad%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+```
+
+```{r}
+ftr_runad$likes<-as.numeric(gsub(",","",ftr_runad$likes))  
+```
+
+```{r}
+avg_runad<-ftr_runad%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(9173, 9173, 9173, 9173, 9173, 9173, 9173))%>%
+     add_column(tasa_like=" ")
+```
+
+```{r}
+tasa_runad<-avg_runad%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+```
+
+```{r}
+avg_runad<-ftr_runad%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(9173, 9173, 9173, 9173, 9173, 9173, 9173))%>%
+     add_column(tasa_like=tasa_runad$tasa_like)  
+```
+     
+```{r}
+ggplot(avg_runad, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - The runaddict", y="Tasa likes")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+#1.Genero 
+ftr_try<-filter_alegria%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_t_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(usuario)
+  
+ftr_try$likes<-as.numeric(gsub(",","",ftr_try$likes))  
+
+seguidores<-c(15300, 10000, 14500, 61100, 18900, 10700, 64400, 25800, 230000, 9173)
+
+avg_try<-ftr_try%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=" ")
+     
+tasa<-avg_try%>%
+     group_by(usuario)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+     
+avg_try<-ftr_try%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=tasa$tasa_like)
+  
+
+ggplot(avg_try, aes(reorder(x=usuario,tasa_like), y=tasa_like, fill =usuario))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Usuario")+ 
+    labs(x="Usuario", title="Tasa likes - Alegría", y="Tasa likes")
+  
+
+
+
+
+
