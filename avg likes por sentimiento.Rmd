@@ -18,7 +18,7 @@ likes<-sentimiento%>%
 # **2.Filtro likes por sentimiento (en este caso alegría) y aplico distinct para solo guardar una linea por caption, de esta forma no duplicare los likes por caption, por lo tanto puede analizar likes por caption por sentimiento de forma exacta**    
      
 ```{r}
-filter_alegria_ena<-likes%>%
+filter_alegria<-likes%>%
     select(Usuario, Likes, linea, caption, sentiment) %>%   
     filter(str_detect(sentiment, "alegria"))%>%
     distinct(linea, .keep_all = TRUE)
