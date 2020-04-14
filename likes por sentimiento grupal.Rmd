@@ -1,0 +1,216 @@
+---
+title: "likes por sentimiento grupal"
+output: html_document
+---
+
+# **1.Creo likes, que permite acceder a data filtrada por sentimiento y agrupada por palabra y linea **
+```{r}
+likes<-sentimiento%>%
+     inner_join(NRC_es, by=c("word"="word"))%>%
+     filter(!grepl("positivo|negativo", sentiment))%>%
+     group_by(sentiment, word, Likes, Usuario, linea)%>%
+     summarize(caption= str_c(word, collapse = " "))%>%
+     ungroup()  
+```
+
+#**Alegría**
+# **2.Filtro likes por usuario (en este caso alegria) y aplico distinct para solo guardar una linea por caption, de esta forma no duplicare los likes por caption, por lo tanto puedo analizar likes por caption por sentimiento de forma exacta**    
+##*De este paso es donde puedo identificar las lineas asociadas a un sentimiento para extraer*
+     
+```{r}
+res_alegria<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(sentiment, "alegria"))%>%
+    distinct(linea, .keep_all = TRUE)
+```
+
+# **3.Crear diccionario de stopwords**
+## *solo uso "likes por que es la palabra que quiero quitar*
+## *para que pueda usarlo en antijoin*
+
+```{r}
+stop_likes<-c("likes",",")%>%
+  as_tibble(stop_likes)
+```
+
+# **4.Elimino la palabra Likes y filtro por sentimiento**
+## *4.a.separo la data en tokens pero al mismo tiempo señalo en lineas = row_number para que la linea a la que corresponda a cada palabra quede señalada.*
+
+## *4.b.para función unnest_token si pongo: token = "ngrams", n = # me permite crear ngram*
+
+## *4.c.crear un vector para que se almacene el resultado y despues poder trabajar con el para volver a unirlo*
+
+## *4.d.Aplico antijoin con stop para borrar Likes*
+
+## *4.e.Aplico rename para cambiar el nombre de las columnas*
+
+## *4.f.Aplico group_by(usuario) para organizar la data por usuario*
+
+## *TIP: si deseo quitar una columna, aplico select EJ: select(-linea)*
+
+```{r}
+ftr_alegria<-res_alegria%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(usuario)
+```
+
+##*transformo la data de la columna likes a numeros* 
+```{r}
+ftr_alegria$likes<-as.numeric(gsub(",","",ftr_alegria$likes))  
+```
+
+##*construyo tabla con el average y desviación de likes de cada sentimiento*
+```{r}
+avg_alegria<-ftr_alegria%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=" ")%>%
+     add_column(tasa_like=" ")
+```
+
+##*construyo seguidores, despues de observar avg_alegria, para asignar los seguidores a cada usuario*
+```{r}
+seguidores<-c(15300, 10000, 14500, 61100, 18900, 10700, 64400, 25800, 230000, 9173)
+```
+
+##*construyo tabla con el average y desviación de likes de cada sentimiento*
+```{r}
+avg_alegria<-ftr_alegria%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=" ")
+```
+
+##*construyo tasa para calcular proporción de likes de cada sentimiento*     
+```{r}
+tasa_alegria<-avg_alegria%>%
+     group_by(usuario)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+```
+
+##*Añado la información de tasa a la tabla de promedios*      
+```{r}
+avg_alegria<-ftr_alegria%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=tasa_alegria$tasa_like)  
+```
+     
+# **5.Genero plot del sentimiento con todos sus usuarios**   
+```{r}
+ggplot(avg_alegria, aes(reorder(x=usuario,tasa_like), y=tasa_like, fill =usuario))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="usuario")+ 
+    labs(x="usuario", title="Tasa likes - Alegría", y="Tasa likes")
+```
+
+#**Anticipación**
+```{r}
+res_anticipacion<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(sentiment, "anticipacion"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_anticipacion<-res_anticipacion%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(usuario)
+
+ftr_anticipacion$likes<-as.numeric(gsub(",","",ftr_anticipacion$likes))  
+
+avg_anticipacion<-ftr_anticipacion%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=" ")%>%
+     add_column(tasa_like=" ")
+
+seguidores<-c(15300, 10000, 14500, 61100, 18900, 10700, 64400, 25800, 230000, 9173)
+
+avg_anticipacion<-ftr_anticipacion%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=" ")
+
+tasa_anticipacion<-avg_anticipacion%>%
+     group_by(usuario)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_anticipacion<-ftr_anticipacion%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=tasa_anticipacion$tasa_like)  
+
+ggplot(avg_anticipacion, aes(reorder(x=usuario,tasa_like), y=tasa_like, fill =usuario))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="usuario")+ 
+    labs(x="usuario", title="Tasa likes - Anticipación", y="Tasa likes")
+```
+
+#**Confianza**
+```{r}
+res_anticipacion<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(sentiment, "anticipacion"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_anticipacion<-res_anticipacion%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(usuario)
+
+ftr_anticipacion$likes<-as.numeric(gsub(",","",ftr_anticipacion$likes))  
+
+avg_anticipacion<-ftr_anticipacion%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=" ")%>%
+     add_column(tasa_like=" ")
+
+seguidores<-c(15300, 10000, 14500, 61100, 18900, 10700, 64400, 25800, 230000, 9173)
+
+avg_anticipacion<-ftr_anticipacion%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=" ")
+
+tasa_anticipacion<-avg_anticipacion%>%
+     group_by(usuario)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_anticipacion<-ftr_anticipacion%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=seguidores)%>%
+     add_column(tasa_like=tasa_anticipacion$tasa_like)  
+
+ggplot(avg_anticipacion, aes(reorder(x=usuario,tasa_like), y=tasa_like, fill =usuario))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="usuario")+ 
+    labs(x="usuario", title="Tasa likes - Anticipación", y="Tasa likes")
+```
+
+
+
+
+
+
+
+# **Tip: para ver la distribución aplicar funcion hist(x)** o **qqnorm(x)** o **boxplot(x)**
+# **TIP2: qqline(x) para trazar una linea entre primer y tercer cuartil, para juzgar lo goodness of fit del qq plot**
+
+# **6.Para exportar la data a excel, aplico**
+##*write_xlsx(ftr_alegria_clean, ftr_alegria_clean.xlsx)*
+###*antes debo instalar y cargar a libreria*
+install.packages("writexl")
+library("writexl")
+
+  

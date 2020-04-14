@@ -14,7 +14,7 @@ likes<-sentimiento%>%
 ```
 
 #**Carolina**
-# **2.Filtro likes por usuario (en este caso carolruizgranados) y aplico distinct para solo guardar una linea por caption, de esta forma no duplicare los likes por caption, por lo tanto puede analizar likes por caption por sentimiento de forma exacta**    
+# **2.Filtro likes por usuario (en este caso carolruizgranados) y aplico distinct para solo guardar una linea por caption, de esta forma no duplicare los likes por caption, por lo tanto puedo analizar likes por caption por sentimiento de forma exacta**    
      
 ```{r}
 res_caro<-likes%>%
@@ -144,12 +144,321 @@ ggplot(avg_runad, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentime
     labs(x="Sentiment", title="Tasa likes - The runaddict", y="Tasa likes")
 ```
 
+#**susy_mora**
+```{r}
+res_susy<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "susy_mora"))%>%
+    distinct(linea, .keep_all = TRUE)
+```
 
+```{r}
+ftr_susy<-res_susy%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+```
 
+```{r}
+ftr_susy$likes<-as.numeric(gsub(",","",ftr_susy$likes))  
+```
 
+```{r}
+avg_susy<-ftr_susy%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(230000, 230000, 230000, 230000, 230000, 230000))%>%
+     add_column(tasa_like=" ")
+```
 
+```{r}
+tasa_susy<-avg_susy%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+```
 
+```{r}
+avg_susy<-ftr_susy%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(230000, 230000, 230000, 230000, 230000, 230000))%>%
+     add_column(tasa_like=tasa_susy$tasa_like)  
+```
+     
+```{r}
+ggplot(avg_susy, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - Susy mora", y="Tasa likes")
+```
 
+**sebastianortizg**
+```{r}
+res_sebast<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "sebastianortizg"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_sebast<-res_sebast%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_sebast$likes<-as.numeric(gsub(",","",ftr_sebast$likes))  
+
+avg_sebast<-ftr_sebast%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(25800, 25800, 25800, 25800, 25800, 25800))%>%
+     add_column(tasa_like=" ")
+
+tasa_sebast<-avg_sebast%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_sebast<-ftr_sebast%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(25800, 25800, 25800, 25800, 25800, 25800))%>%
+     add_column(tasa_like=tasa_sebast$tasa_like)  
+
+ggplot(avg_sebast, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - Sebastian Ortizg", y="Tasa likes")
+```
+
+**natyarbelaezs**
+```{r}
+res_naty<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "natyarbelaezs"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_naty<-res_naty%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_naty$likes<-as.numeric(gsub(",","",ftr_naty$likes))  
+
+avg_naty<-ftr_naty%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(64400, 64400, 64400, 64400, 64400, 64400, 64400))%>%
+     add_column(tasa_like=" ")
+
+tasa_naty<-avg_naty%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_naty<-ftr_naty%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(64400, 64400, 64400, 64400, 64400, 64400, 64400))%>%
+     add_column(tasa_like=tasa_naty$tasa_like)  
+
+ggplot(avg_naty, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - Naty Arbelaez", y="Tasa likes")
+```
+
+**itsurstyle_**
+```{r}
+res_itsur<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "itsurstyle_"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_itsur<-res_itsur%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_itsur$likes<-as.numeric(gsub(",","",ftr_itsur$likes))  
+
+avg_itsur<-ftr_itsur%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(10700, 10700, 10700, 10700, 10700, 10700, 10700))%>%
+     add_column(tasa_like=" ")
+
+tasa_itsur<-avg_itsur%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_itsur<-ftr_itsur%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(10700, 10700, 10700, 10700, 10700, 10700, 10700))%>%
+     add_column(tasa_like=tasa_itsur$tasa_like)  
+
+ggplot(avg_itsur, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - itsurstyle_", y="Tasa likes")
+```
+
+**eyaar**
+```{r}
+res_yaar<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "eyaar"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_yaar<-res_yaar%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_yaar$likes<-as.numeric(gsub(",","",ftr_yaar$likes))  
+
+avg_yaar<-ftr_yaar%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(18900, 18900, 18900, 18900))%>%
+     add_column(tasa_like=" ")
+
+tasa_yaar<-avg_yaar%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_yaar<-ftr_yaar%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(18900, 18900, 18900, 18900))%>%
+     add_column(tasa_like=tasa_yaar$tasa_like)  
+
+ggplot(avg_yaar, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - eyaar", y="Tasa likes")
+```
+
+**enahernandezh**
+```{r}
+res_ena<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "enahernandezh"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_ena<-res_ena%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_ena$likes<-as.numeric(gsub(",","",ftr_ena$likes))  
+
+avg_ena<-ftr_ena%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(61100, 61100, 61100, 61100, 61100, 61100))%>%
+     add_column(tasa_like=" ")
+
+tasa_ena<-avg_ena%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_ena<-ftr_ena%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(61100, 61100, 61100, 61100, 61100, 61100))%>%
+     add_column(tasa_like=tasa_ena$tasa_like)  
+
+ggplot(avg_ena, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - Ena Hernandez", y="Tasa likes")
+```
+
+**camilo.merchan**
+```{r}
+res_merchan<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "camilo.merchan"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_merchan<-res_merchan%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_merchan$likes<-as.numeric(gsub(",","",ftr_merchan$likes))  
+
+avg_merchan<-ftr_merchan%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(10000, 10000, 10000, 10000, 10000))%>%
+     add_column(tasa_like=" ")
+
+tasa_merchan<-avg_merchan%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_merchan<-ftr_merchan%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(10000, 10000, 10000, 10000, 10000))%>%
+     add_column(tasa_like=tasa_merchan$tasa_like)  
+
+ggplot(avg_merchan, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - Camilo Merchan", y="Tasa likes")
+```
+
+**aethosheadcoach**
+```{r}
+res_aet<-likes%>%
+    select(Usuario, Likes, linea, caption, sentiment) %>%   
+    filter(str_detect(Usuario, "aethosheadcoach"))%>%
+    distinct(linea, .keep_all = TRUE)
+
+ftr_aet<-res_aet%>%
+  mutate(linea= row_number()) %>%
+  ungroup() %>%
+  unnest_tokens(token, Likes)%>%
+  anti_join(stop_likes, by=c("token"="value"))%>%
+  rename(usuario=Usuario, likes=token)%>%
+  group_by(sentiment)
+
+ftr_aet$likes<-as.numeric(gsub(",","",ftr_aet$likes))  
+
+avg_aet<-ftr_aet%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(15300, 15300, 15300, 15300, 15300, 15300, 15300))%>%
+     add_column(tasa_like=" ")
+
+tasa_aet<-avg_aet%>%
+     group_by(sentiment)%>%
+     summarise(tasa_like=avg_likes/seguidores)
+
+avg_aet<-ftr_aet%>%
+     summarise(sd_likes=sd(likes), avg_likes=mean(likes))%>%
+     add_column(seguidores=c(15300, 15300, 15300, 15300, 15300, 15300, 15300))%>%
+     add_column(tasa_like=tasa_aet$tasa_like)  
+
+ggplot(avg_aet, aes(reorder(x=sentiment,tasa_like), y=tasa_like, fill =sentiment))+
+    geom_col()+
+    theme(axis.text.x=element_text(angle=90, vjust = -0,1))+
+    scale_fill_brewer(palette = "Spectral",name="Sentiment")+ 
+    labs(x="Sentiment", title="Tasa likes - aethosheadcoach", y="Tasa likes")
+```
 
 
 
